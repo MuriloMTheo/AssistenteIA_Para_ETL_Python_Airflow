@@ -67,8 +67,8 @@ Sempre dê uma resposta explicativa ao usuário e somente depois pergunte se ele
 
 # sidebar
 with st.sidebar:
-    st.title()
-    st.markdown()
+    st.title("Seu assistente de IA!")
+    st.markdown("---")
 
     # Inserir a chave API Groq
     groq_api_key = st.text_input(
@@ -144,7 +144,7 @@ if prompt := st.chat_input('Digite aqui sua dúvida sobre Python, SQL, ou outros
                 st.markdown(AI_resposta)  # exibe no streamlit
                 st.session_state.messages.append(
                     # armazena resposta
-                    {"role": "assistent", "content": AI_resposta})
+                    {"role": "assistant", "content": AI_resposta})
 
             except Exception as e:
                 st.error(
