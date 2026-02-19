@@ -89,3 +89,63 @@ st.title('METL AI CODER')
 st.title('Seu Assistente Pessoal em Desenvolvimento ETL 🎲')
 # texto auxiliar
 st.caption('Faça sua pergunta sobre algum processamento ETL e obtenha código, explicações e referências.')
+
+# iniciar histórico de msgs na sessão, SE não existir
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+# exibir msgs armazenadas na session
+for message in st.session_state.messages:
+    with st.chat_message(message["role"]):
+        st.markdown(message["content"])
+
+client = None
+
+# user enviou a api key
+if groq_api_key:
+    try:  # funcao Groq
+        client = Groq(api_key=groq_api_key)
+
+    except Exception as e:
+        st.sidebar.error(f'Erro ao inicializar o cliente Groq: {e}')
+        st.stop()
+elif st.session_state.messages:
+    st.warning('Por favor, insira sua API Key da Groq na barra lateral!')
+
+if prompt := st.chat_input('Digite aqui sua dúvida sobre Python, SQL, ou outros processamentos ETL.'):
+    if not client:  # ou seja, nao colocou a chave da api ainda
+        st.warning(
+            'Por favor, insira sua API Key da Groq na barra lateral para começar!')
+        st.stop()
+
+    st.session_state.messages.append(
+        {"role": "user", "content": prompt})  # armazena a msg do user
+
+    with st.chat_message("user"):
+        st.markdown(prompt)  # exibindo msg do user
+
+    messages_for_api = [{"role": "system", "content": CUSTOM_PROMPT}]
+    for msg in st.session_state.messages:
+        # para cada msg digitada pelo user, adicione ela ao prompt definido inicialmente
+        messages_for_api.append(msg)
+
+    with st.chat_message("assistant"):
+        with st.spinner("Analisando perguntando..."):
+            try:
+                # chamado da api groq pra gerar resposta
+                chat_completion = client.chat.completions.create(
+                    messages=messages_for_api,
+                    model="openai/gpt-oss-20b",
+                    temperature=0.7,
+                    max_tokens=2048
+                )
+                # extraindo resposta
+                AI_resposta = chat_completion.choices[0].message.content
+
+                st.markdown(AI_resposta)  # exibe no streamlit
+                st.session_state.messages.append(
+                    # armazena resposta
+                    {"role": "assistent", "content": AI_resposta})
+
+            except Exception as e:
+                st.error(
+                    f"Ocorreu um erro ao se comunicar com a API da Groq: {e}")
